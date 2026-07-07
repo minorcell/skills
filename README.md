@@ -17,18 +17,6 @@ A collection of skills distilled from minorcell's own workflows and useful pract
 npx skills add minorcell/minorcell-skills
 ```
 
-### Codex Project-Level Install
-
-If you only need a subset of skills in one project, copy or symlink each needed skill as a full directory under `.agents/skills`:
-
-```text
-<project>/.agents/skills/writing-blog/SKILL.md
-<project>/.agents/skills/writing-proposals/SKILL.md
-<project>/.agents/skills/writing-product-docs/SKILL.md
-<project>/.agents/skills/web-design/SKILL.md
-<project>/.agents/skills/web-performance/SKILL.md
-```
-
 ## Available Skills
 
 | Name | Description |
