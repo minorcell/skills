@@ -1,0 +1,23 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Writing",
+      "description": "Skills for blog, proposal, and product-document writing.",
+      "skills": [
+        "writing-blog",
+        "writing-proposals",
+        "writing-product-docs"
+      ]
+    },
+    {
+      "title": "Web",
+      "description": "Skills for web design and frontend performance.",
+      "skills": [
+        "web-design",
+        "web-performance"
+      ]
+    }
+  ]
+}
