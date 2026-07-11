@@ -1,0 +1,4 @@
+interface:
+  display_name: "提取 B 站视频内容"
+  short_description: "提取 B 站公开视频、字幕、音频、关键帧与评论证据"
+  default_prompt: "使用 $extract-bilibili-video 提取并分析这个 B 站公开视频的可验证内容。"
