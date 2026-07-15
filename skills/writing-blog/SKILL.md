@@ -1,147 +1,228 @@
 ---
 name: writing-blog
 description: >
-  Write high-quality technical or general blog posts by synthesizing proven writing philosophies
-  from top practitioners (Paul Graham, Joel Spolsky, Phodal, etc.).
-  Triggered when the user asks to write a blog post, article, essay, or technical content,
-  or when asked to improve/draft/review blog content.
+  Draft, research, rewrite, and review technical or general blog posts, articles,
+  and essays. Use when Codex needs to create new content, improve an existing
+  draft, adapt writing for a specific audience, strengthen evidence and reasoning,
+  preserve an author's voice, or prepare a post for publication.
 ---
 
-# Blog Writing Skill
+# Writing Blog Posts
 
-A distilled, actionable writing framework synthesized from the practices of Paul Graham, Joel Spolsky/Sashko Stubailo, Phodal, and the broader technical writing community.
+## Objective
 
-## Core Philosophy
+Turn a useful idea into an article that a defined reader can understand, trust,
+and remember. Preserve the author's actual intent and voice instead of replacing
+them with a generic polished style.
 
-> "Good writing should be convincing because you got the right answers, not because you did a good job of arguing."
-> — Paul Graham
+Do not force every article into the same structure. Let the subject, reader, and
+requested outcome determine the form.
 
-### The Four Pillars of Useful Writing (Graham)
+## Choose the Working Mode
 
-Every post must score high on at least two of these:
+Identify the task before acting:
 
-| Pillar          | Meaning                                                    | Check                                                         |
-| --------------- | ---------------------------------------------------------- | ------------------------------------------------------------- |
-| **Importance**  | The topic matters to the reader.                           | Does this solve a real problem or answer a real question?     |
-| **Novelty**     | The reader learns something they didn't know.              | Is there a surprise, anomaly, or non-obvious insight?         |
-| **Correctness** | What you say is true and defensible.                       | Can you cite sources, show code, or provide evidence?         |
-| **Strength**    | You state your position clearly without excessive hedging. | Are you saying something concrete, or just vaguely gesturing? |
+| Mode | Default behavior |
+| --- | --- |
+| Draft | Develop the thesis, structure, and article from the supplied idea or material. |
+| Research and draft | Establish the claims and evidence before writing the narrative. |
+| Revise | Diagnose the existing draft, then make the smallest changes that solve the stated problems. |
+| Continue | Match the existing argument, terminology, voice, and formatting before adding material. |
+| Review | Lead with concrete problems and explain why they weaken the article. Do not rewrite unless asked. |
 
-### Write Simply, Write Like You Talk
+Proceed directly when the user has clearly requested writing or editing. Ask a
+question only when ambiguity about the thesis, audience, evidence standard, or
+delivery format would materially change the result.
 
-- Use ordinary words. Complex sentences and fancy words give the writer the false impression they're saying more than they actually are.
-- Read your draft out loud. Fix everything that doesn't sound like conversation. Fix phonetically awkward bits.
-- Short sentences win. A five-sentence good argument beats a hundred-sentence ramble.
-- Cut everything unnecessary. If a sentence, paragraph, or section doesn't directly serve the reader's goal, delete it.
+## Establish the Writing Contract
 
-### The Reader-First Mindset
+Before drafting, determine:
 
-- Define the audience before the first sentence. Beginner? Senior engineer? Non-technical stakeholder? The audience determines depth, jargon level, and assumed context.
-- Write for a reader who won't read carefully. Structure must be scannable: headings, lists, code blocks, and bold key points.
-- Start with the promise. The first paragraph must tell the reader exactly what they will get and why it's worth their time.
+1. **Job**: What single job should this article do?
+2. **Reader**: Who is reading, and what can they already be expected to know?
+3. **Outcome**: What should the reader understand, believe, decide, or be able to do afterward?
+4. **Thesis**: What is the central claim or organizing idea?
+5. **Constraints**: What length, tone, format, sources, repository conventions, or publication requirements apply?
 
-## Workflow: The 5-Step Method
+Keep these answers internal unless the user asks for a plan. Do not replace the
+user's thesis with a more fashionable or more convenient one. Surface a conflict
+when the requested evidence cannot support the requested claim.
 
-### Step 1 — Find the Topic & Commit
+When editing an existing artifact, inspect its surrounding structure first.
+Preserve correct facts, citations, metadata, links, terminology, and unaffected
+prose unless the user asks for a broader rewrite.
 
-- Write what you know. If you spent hours learning something and can explain it in minutes, you provide value.
-- Fill a gap. Look for topics that are under-explained or where existing content is outdated/wrong.
-- Start small. Installation guides, bug fixes, "how X works under the hood" — daily work is valid material.
-- Don't wait for brilliance. Execution matters more than the idea. A mediocre idea with great execution beats a great idea with poor execution.
+## Bridge the Reader's Knowledge Gap
 
-### Step 2 — Define Audience & Goal
+Defining an audience is not enough. Identify what the reader must understand
+before the main argument works.
 
-Answer these two questions in one sentence each before writing:
+For each prerequisite concept, decide whether to:
 
-1. Who is reading this? (e.g., "Junior frontend devs who have never touched Webpack")
-2. What will they be able to do after reading? (e.g., "Configure a basic splitChunks strategy without copy-pasting")
+- assume it because it is appropriate for the stated reader;
+- explain it briefly at first use;
+- anchor it in a familiar example before introducing the abstraction;
+- explain the relationship between it and nearby concepts; or
+- link to background material when a full explanation would derail the article.
 
-Constraint: If a section doesn't serve this specific goal for this specific audience, remove it.
+Prefer one concrete scene, object, action, or example before a dense abstract
+explanation. Layer detail: give the reader a usable mental model first, then add
+precision where the argument requires it.
 
-### Step 3 — Structure: Beginning, Middle, End
+Do not turn every article into a beginner tutorial. Add only the bridge needed for
+the intended reader to follow the next step.
 
-#### Introduction (The Hook)
+## Build Claims from Evidence and Reasoning
 
-- 1-2 paragraphs max.
-- Context + Promise: what problem this solves and what the reader will learn.
-- Never bury the lede. State the most important sentence first.
+For claims that carry the article, use this chain:
 
-#### Middle (The Meat)
+```text
+claim -> evidence -> reasoning -> conclusion -> boundary
+```
 
-- Use hierarchical headings (##, ###) as a map. Readers should be able to navigate by headings alone.
-- Alternate between storytelling (relatable scenario, pain point) and demonstration (code, data, steps).
-- One idea per paragraph. One concept per code block.
-- Use lists for sequential steps, tables for comparisons, diagrams for architecture.
+Distinguish among:
 
-#### Conclusion (The Payoff)
+- **Sourced fact**: directly supported by a reliable source.
+- **Observation**: visible in data, behavior, code, an artifact, or an example.
+- **Inference**: a conclusion drawn from facts or observations.
+- **Opinion**: the author's judgment, preference, or interpretation.
 
-- Summarize what was learned in 2-3 sentences.
-- Provide a call to action: try the code, read the source, leave a comment, check the repo.
-- End decisively. Don't taper off.
+Do not present an inference as a sourced fact. Do not use a later outcome as proof
+that someone originally intended that outcome. State uncertainty and competing
+explanations when they materially affect the conclusion.
 
-### Step 4 — Get Feedback & Iterate
+Prefer primary sources for important factual claims. Place citations close to the
+claims they support. Use examples, code, data, or counterexamples when they make
+the reasoning inspectable rather than merely persuasive.
 
-- Share the draft cold. Don't explain what you meant. Hand it over and ask: "What did you get out of this?"
-- Validate the goal. Did the reader achieve the intended outcome, or did they get lost?
-- Revise ruthlessly. 80% of the ideas in an essay happen after you start writing; 50% of what you started with will be wrong. Be confident enough to cut.
+Research only to the depth the article needs. A practical note may need one
+verified reference; a consequential comparison or historical argument may need
+multiple independent sources.
 
-### Step 5 — Polish: Packaging, Publication, Promotion
+## Choose a Structure That Fits the Job
 
-- Title is a promise, not a trick. Good titles are specific and contain keywords the reader would search for. Bad titles are vague or pure clickbait.
-- One strong image or diagram beats a thousand words of explanation. Ensure diagrams are high-contrast and color-coded.
-- Code blocks must be copy-paste ready. Include file names, language tags, and brief comments.
-- Link generously. Cite sources, link to docs, reference related posts. It builds trust and SEO.
-- Proofread twice. Once for logic/flow, once for typos and formatting.
+Use the article's purpose to choose its shape:
 
-## Article Type Strategies
+| Article job | Useful default structure |
+| --- | --- |
+| Teach a task | Result -> prerequisites -> steps -> verification -> common failures |
+| Solve a problem | Symptom -> diagnosis -> cause -> fix -> prevention |
+| Explain a subject | Guiding question -> mental model -> mechanism -> implications -> limits |
+| Make an argument | Thesis -> reasons -> evidence -> counterargument -> boundary -> conclusion |
+| Compare options | Decision context -> criteria -> tradeoffs -> recommendation -> exceptions |
+| Reflect on experience | Concrete situation -> tension -> change in understanding -> transferable lesson |
 
-| Type             | Strategy                                                     | Example Title Pattern                               |
-| ---------------- | ------------------------------------------------------------ | --------------------------------------------------- |
-| Tutorial/Guide   | Step-by-step, goal-oriented, code-first.                     | "How to set up X with Y in 10 minutes"              |
-| Deep Dive/Survey | Anatomy of a system, trade-off analysis, historical context. | "How X works under the hood" / "A deep dive into Y" |
-| Problem/Solution | Start with the error, show debugging, end with fix.          | "Fixing the dreaded X error: a complete guide"      |
-| List/Comparison  | Bite-sized, scannable, opinionated ranking.                  | "5 ways to do X (and which to choose)"              |
-| Opinion/Essay    | One strong thesis, evidence, clear stance.                   | "Why X is not the answer" / "The case for Y"        |
-| News/Release     | What changed, why it matters, migration path.                | "X 2.0: what you need to know"                      |
+Treat these as starting points, not mandatory templates.
 
-## Hard Rules (Never Break)
+Open with the most useful entry point: a problem, claim, result, scene, question, or
+surprising observation. Do not impose a fixed paragraph count. Make the direction
+of the article clear before asking the reader to absorb extensive background.
 
-1. One job per post. A tutorial should not also be a manifesto. If you have two ideas, write two posts.
-2. No jargon without definition. Every acronym must be expanded on first use. Every technical term must be explained or linked.
-3. Show your work. If you claim a fact, provide a source, a code snippet, or a benchmark. "Show, don't tell."
-4. No walls of text. Break paragraphs before they exceed 5 lines. Use visual anchors (headings, lists, code) every 2-3 paragraphs.
-5. Code must run. Every code example must be syntactically valid and ideally tested. Include setup steps if needed.
-6. Respect the reader's time. If the reader can get the answer in 3 minutes, don't stretch it to 15.
+Use headings as a map for long articles. Keep one main idea per section and make
+transitions explain why the next section follows. Alternate abstraction with
+concrete evidence or examples when the material becomes dense.
 
-## Quality Checklist (Before Publishing)
+End when the thesis has been resolved. Add a call to action only when the reader
+has a natural next action. Add diagrams, tables, screenshots, or code only when
+they explain a relationship more clearly than prose.
 
-- [ ] Title contains a keyword or clearly states the topic
-- [ ] First paragraph states the promise (what the reader gets)
-- [ ] Headings form a readable outline on their own
-- [ ] Every code block has a language tag and a file path/context
-- [ ] All acronyms defined on first use
-- [ ] At least one visual element (diagram, table, or screenshot)
-- [ ] Conclusion summarizes the key takeaway and has a CTA
-- [ ] Read out loud once; no awkward or overly complex sentences
-- [ ] Spell-checked and grammar-checked
-- [ ] All links verified (not 404)
+## Write in the Author's Language and Voice
 
-## Reference: The Masters' Heuristics
+- Write natively in the target language; do not mirror the syntax of source material.
+- Prefer concrete subjects and verbs over chains of abstract nouns.
+- Use ordinary words unless a precise technical term is necessary.
+- Define unfamiliar jargon according to the reader, not by expanding every acronym mechanically.
+- Keep terminology stable after introducing it.
+- Break sentences when clauses compete for attention, but vary sentence length enough to avoid a mechanical rhythm.
+- Remove filler, generic transitions, inflated claims, and narration about what the article is about to do.
+- Preserve deliberate informality, restraint, humor, or first-person perspective when it belongs to the author.
+- Read difficult passages aloud and rewrite anything that sounds translated, ceremonial, or unnatural.
 
-- Paul Graham: Write simply. Cut mercilessly. Novelty comes from anomalies. Good essays have importance + novelty + correctness + strength. Write like you talk.
-- Sashko Stubailo (Apollo/Meteor): Commit to a topic. Make the audience and goal specific. Have a beginning, middle, and end. Get feedback cold. Polish packaging.
-- Phodal: Titles are class names (must be clear). Headings are method names (must describe action). Content is the function body (keep it focused). Images are UI (make them high-contrast).
-- Simple Talk Anonymous: Tell stories to draw readers in. Demonstrate concepts with authentic examples. Moderate jargon. Show sources. Be clear, never dull.
-- JavaGuide/Chinese Community: Short sentences. Determine the reader first. Good articles are revised, not written once. Visuals matter. Output倒逼输入 (output drives input).
+Clarity does not require flattening the author's personality. Polish the expression
+without erasing the point of view.
 
-## Output Format
+## Revise in Separate Passes
 
-When asked to write or draft a blog post, produce:
+Do not try to fix everything sentence by sentence in one pass.
 
-1. A proposed title and audience/goal statement for confirmation.
-2. Upon approval, a full draft in Markdown with:
-   - YAML frontmatter (title, date, tags, description)
-   - Structured body following the 5-step workflow above
-   - All code blocks syntax-highlighted and runnable
-   - At least one visual suggestion (diagram description or ASCII art)
-3. A self-review covering the four pillars (importance, novelty, correctness, strength) and the quality checklist.
+### Pass 1: Intent and Logic
+
+- Confirm that the thesis matches the author's intended point.
+- Check that each section advances the article's single job.
+- Remove repeated arguments, contradictions, detours, and conclusions that do not follow.
+
+### Pass 2: Evidence and Precision
+
+- Verify consequential facts, links, quotations, examples, and code.
+- Separate evidence from inference and opinion.
+- Add qualifications where the claim is narrower than the prose suggests.
+
+### Pass 3: Reader Understanding
+
+- Find concepts introduced before the reader has a mental model for them.
+- Add only the definitions, examples, and transitions needed to cross those gaps.
+- Check that headings, lists, tables, and diagrams reduce effort rather than decorate the page.
+
+### Pass 4: Language and Voice
+
+- Replace translated or overly abstract phrasing with natural expression.
+- Shorten overloaded sentences and remove empty connective phrases.
+- Check rhythm, terminology, tone, and consistency with the author's existing voice.
+
+After local edits, reread the surrounding paragraphs. A sentence can improve in
+isolation while making the section less coherent.
+
+## Use Feedback as Diagnosis
+
+Classify feedback before revising:
+
+- **Intent**: the draft says something different from what the author meant.
+- **Logic**: the reasoning skips a step or reaches too far.
+- **Evidence**: a claim is unsupported, outdated, or overstated.
+- **Reader**: required knowledge or context is missing.
+- **Structure**: information appears in the wrong order or repeats.
+- **Language**: wording is unnatural, vague, dense, or inconsistent.
+- **Voice**: the article no longer sounds like its author.
+- **Artifact**: formatting, links, code, diagrams, or rendering are broken.
+
+Fix the reusable cause of the problem, then reread the whole affected section.
+Do not rewrite unrelated material merely because a nearby paragraph could also be
+improved.
+
+## Verify the Deliverable
+
+Scale verification to what the article contains:
+
+- Run code examples when the article depends on them.
+- Verify links and source attribution for claims that rely on them.
+- Check calculations, commands, versions, names, and dates.
+- Validate Markdown, frontmatter, formatting, and repository conventions.
+- Render the page when layout, tables, diagrams, images, themes, or responsive behavior matter.
+- Report any verification that could not be performed.
+
+When working inside a repository, modify the artifact directly if authorized and
+keep the diff scoped to the request. Report adjacent publishing defects instead
+of silently expanding into unrelated implementation work.
+
+## Deliver Adaptively
+
+- Do not require title confirmation when the user has already approved the direction.
+- Do not add YAML frontmatter unless the destination format or repository expects it.
+- Do not force a visual, code block, call to action, or fixed section template into every post.
+- For a draft, deliver the draft or update the requested file.
+- For a revision, summarize the material changes and preserve untouched content.
+- For a review, present the most consequential findings first.
+- Keep self-review internal unless a remaining risk or tradeoff helps the user decide.
+
+## Final Quality Gate
+
+Before delivering, verify:
+
+- The article has one clear job, reader, and central idea.
+- The structure fits the article instead of a generic template.
+- Important claims are supported, and inference is distinguishable from fact.
+- The intended reader can cross every necessary knowledge gap.
+- Examples and visuals perform explanatory work.
+- The target language sounds natural and the author's voice remains recognizable.
+- The conclusion resolves the article without unnecessary repetition.
+- Included code, links, metadata, and rendered elements were checked as appropriate.
