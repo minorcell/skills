@@ -14,7 +14,7 @@ A collection of skills distilled from minorcell's own workflows and useful pract
 ### Quick Install
 
 ```bash
-npx skills add minorcell/minorcell-skills
+npx skills add minorcell/skills
 ```
 
 ## Available Skills
