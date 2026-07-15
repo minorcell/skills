@@ -2,7 +2,7 @@
 name: writing-blog
 description: >
   Draft, research, rewrite, and review technical or general blog posts, articles,
-  and essays. Use when Codex needs to create new content, improve an existing
+  and essays. Use when you needs to create new content, improve an existing
   draft, adapt writing for a specific audience, strengthen evidence and reasoning,
   preserve an author's voice, or prepare a post for publication.
 ---
