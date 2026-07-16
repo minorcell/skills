@@ -172,6 +172,7 @@ def main() -> int:
         warnings.append("Bilibili reports that subtitle access may require login; authentication was not attempted.")
 
     evidence = {
+        "platform": "bilibili",
         "source_url": source_url,
         "bvid": bvid,
         "aid": view.get("aid"),
