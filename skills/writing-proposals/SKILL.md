@@ -1,179 +1,252 @@
 ---
 name: writing-proposals
-description: >
-  Draft, rewrite, continue, or review technical proposals, RFCs, design issues,
-  product-change proposals, API or language proposals, tooling proposals, and
-  implementation plans intended to support a decision. Use when Codex needs to
-  turn a change idea into a reviewable argument, improve an existing proposal
-  without imposing a generic template, or diagnose why a proposal is hard to
-  evaluate. Adapt structure, depth, language, and evidence to the proposal's
-  audience and context. Do not use for ordinary coding tasks or brief execution
-  plans unless the user asks for a proposal, RFC, or design document.
+description: Use when drafting, rewriting, reviewing, or standardizing a technical proposal, RFC, design issue, product-change proposal, API proposal, language proposal, tooling proposal, or implementation plan that should be incremental, simple, subtractive, boundary-aware, and grounded in real user stories.
 ---
 
 # Writing Proposals
 
-## Objective
+## Overview
 
-Help a specific audience make a well-informed decision. Treat a proposal as an
-argument for a decision, not as a document schema.
+Write proposals as small, reviewable design increments. The goal is not to describe a whole system at once; the goal is to isolate the next necessary design decision, express it simply, remove avoidable complexity, define boundaries, and ground the change in real user stories.
 
-Preserve the author's intent while making the need, proposed change, reasoning,
-and material consequences clear enough to evaluate. Do not force proposals into
-a fixed structure. Let the decision, audience, risk, subject, and repository
-conventions determine the form and depth.
+A good proposal makes a reviewer able to decide, an implementer able to build, and a maintainer able to verify. Format is secondary to this thinking model.
 
-## Choose the Working Mode
+## Core Thinking Model
 
-Identify the task before acting:
+### 1. Design Progressively
 
-| Mode | Default behavior |
-| --- | --- |
-| Draft | Develop the decision, reasoning, and document from the supplied idea or evidence. |
-| Research and draft | Establish the important facts and constraints before making the case. |
-| Revise | Diagnose the existing proposal, then make the smallest changes that solve the stated problems. |
-| Continue | Match the existing argument, terminology, language, and structure before adding material. |
-| Review | Lead with the most consequential problems. Do not rewrite unless asked. |
+One proposal should settle one clear increment. Do not try to explain every related subsystem, future extension, or complete architecture in a single proposal.
 
-Proceed directly when the requested outcome is clear. Ask a question only when
-ambiguity about the decision, audience, evidence, or destination format would
-materially change the result.
+Use follow-up proposals for adjacent decisions. Prefer a narrow proposal that can be accepted, implemented, and tested over a broad proposal that tries to solve the whole future.
 
-## Establish the Decision Contract
+### 2. Prefer Simple, Direct Expression
 
-Before drafting, determine:
+Choose the expression a reader can understand immediately. If one realistic example explains the design, lead with the example before abstract definitions. If one rule can explain the behavior, do not introduce multiple mechanisms.
 
-1. **Decision**: What should the reader approve, reject, choose, or align on?
-2. **Audience**: Who makes or influences that decision, and what do they need to understand?
-3. **Need**: What problem, opportunity, constraint, or prior decision makes this proposal necessary?
-4. **Change**: What would become different if the proposal were accepted?
-5. **Consequences**: Which effects, risks, tradeoffs, or unknowns could change the decision?
-6. **Constraints**: What length, language, format, evidence standard, or repository convention applies?
+The design should be short, teachable, implementable, and easy to remember.
 
-Keep these answers internal unless the user asks for a plan or the proposal needs
-to state them. When working on an existing artifact, inspect its surrounding
-documents and conventions before changing its structure or voice.
+### 3. Do Subtractive Design
 
-## Find the Real Decision
+The proposal should reduce redundancy or accidental complexity. Look for opportunities to remove:
 
-Separate the motivating facts from the interpretation and the proposed response.
-A reported problem does not automatically justify a particular solution.
+- boilerplate code
+- manual steps
+- repeated configuration
+- exposed intermediate mechanisms
+- special cases users must remember
+- duplicated concepts across similar workflows
 
-Prefer the smallest decision that can be evaluated independently, but do not
-split a system-wide decision merely to make the document appear incremental.
-Some proposals are inherently cross-cutting or require a complete migration,
-policy, or semantic model to be coherent.
+Do not add features for completeness. Add the smallest design that lets the system absorb repeated work or remove unnecessary user burden.
 
-Ground the case in the evidence actually available: user experience, incidents,
-code, operational cost, constraints, prior decisions, research, or examples. One
-real case can justify a narrow proposal. Look for a broader pattern only when the
-evidence supports one; do not invent user stories or generality.
+### 4. Define Boundaries Carefully
 
-## Build a Reviewable Case
+Make the limits explicit:
 
-Make the reasoning inspectable. A useful chain is:
+- what this proposal solves
+- what it does not solve
+- which cases are valid
+- which cases are errors
+- whether existing behavior changes
+- what workaround exists today
+- where this design meets existing mechanisms
 
-```text
-evidence -> interpretation -> proposed change -> expected consequence -> boundary
+Clear boundaries prevent a proposal from expanding into a large system design.
+
+### 5. Abstract From Broad User Stories
+
+Do not add a feature mechanically from one case. Look across related user stories and find the shared need underneath them. The proposal should capture the smallest common design that serves those stories.
+
+If the need appears in only one narrow case, keep the proposal narrow. If multiple stories point to the same missing expression, define that expression directly.
+
+## Workflow
+
+1. Collect the concrete user stories, examples, bugs, or workflows that motivate the change.
+2. Extract the common need and state it in one sentence.
+3. Identify the smallest design increment that addresses that need.
+4. Remove scope that belongs in future proposals.
+5. Express the proposed behavior with examples, rules, and boundaries.
+6. Show current workaround and why the new design removes redundancy.
+7. Add compatibility, errors, alternatives, and tests only to the depth required by risk.
+
+## Template Selection
+
+| Situation | Use |
+|---|---|
+| Seed idea, narrow behavior, link to upstream design, or small issue | Short template |
+| Normal technical change for review | Standard template |
+| Language, API, CLI, protocol, architecture, data model, or user-visible workflow with lasting behavior | Full specification |
+| DSL, query language, or dense notation | Full specification plus Scope and Quick Reference |
+
+Increase template weight only when risk increases. Do not use a full specification to make a simple proposal look more important.
+
+## Short Template
+
+Use this when the design is small and the decision point is obvious.
+
+```md
+### Proposal
+
+State the change directly. Include the concrete new behavior, API, command, rule, or user-visible result.
+
+### Background
+
+Explain why this is needed. Link related issues, upstream designs, examples, existing behavior, or user stories.
+
+### Workarounds
+
+Describe the current workaround and why it is insufficient. If none exists, write `none`.
 ```
 
-Treat this as a reasoning aid, not a required section order. Distinguish facts,
-assumptions, judgments, and open questions when confusing them would weaken the
-decision.
+For compatibility or adoption proposals, add:
 
-Use only the support the proposal needs:
+```md
+### Reference
 
-- Explain the current behavior or workaround when it demonstrates the problem.
-- Use examples when they clarify behavior, semantics, or user impact.
-- Describe alternatives when they are real options or likely reviewer questions.
-- Include implementation details when they establish feasibility or define a contract.
-- Cover compatibility, migration, failure behavior, rollout, and testing when they materially affect acceptance or execution.
+Link the upstream accepted design and summarize the local implication in one sentence.
+```
 
-Do not manufacture examples, metrics, rejected alternatives, risks, or consensus
-to make the proposal look complete.
+## Standard Template
 
-## Let the Decision Shape the Document
+Use this for most proposals.
 
-Choose the most direct order for the target audience. A proposal may begin with a
-problem, a concrete change, an example, a constraint, or a prior decision. Use
-headings only when they help the reader navigate the argument.
+```md
+# Proposal: <specific change>
 
-A small proposal may be a few paragraphs. A consequential proposal may need a
-long specification. Length should follow the number of decisions, the amount of
-uncertainty, and the cost of being wrong, not the proposal category.
+## 1. Summary
 
-Consider scope, boundaries, alternatives, errors, compatibility, migration, and
-tests internally. Put them in the document only when they help readers decide,
-define the accepted contract, or reduce a material implementation or rollout
-risk. Do not emit empty sections, placeholder tables, or `none` entries.
+One paragraph: what changes, where it applies, and the smallest design increment being proposed.
 
-Use tables, diagrams, code, and examples only when they make a relationship or
-behavior easier to evaluate than prose. Do not expose the internal checklist as
-the document's structure.
+## 2. User Stories / Motivation
 
-## Apply Design Pressure Without Dictating the Design
+List the concrete stories or workflows. Then state the common need they reveal.
 
-Challenge unnecessary scope, mechanisms, special cases, and user burden. Prefer
-existing concepts and simpler rules when they satisfy the same need.
+## 3. Current Workaround
 
-Treat incremental and subtractive design as useful pressures, not universal
-requirements. A sound proposal may add necessary complexity, replace a complete
-system boundary, explore uncertainty, or coordinate a broad change. In those
-cases, make the cost and reason visible instead of forcing the design into a
-smaller shape.
+Describe how users solve this today and what redundancy, manual work, or inconsistency remains.
 
-State boundaries when ambiguity would change the decision. Separate future ideas
-from the current decision when they distract from it, but do not add an
-`Out of Scope` section merely to satisfy convention.
+## 4. Goals
 
-## Write for the Target Reader and Language
+- Goal 1
+- Goal 2
+- Goal 3
 
-- Follow an explicitly requested artifact language.
-- Otherwise follow existing repository documents, then the user's language.
-- Write directly in the target language; do not translate English syntax or a generic template sentence by sentence.
-- Match the target community's terminology, heading style, and level of formality.
-- Preserve code identifiers and official technical terms while explaining them naturally.
-- Prefer concrete subjects and verbs over abstract noun chains, filler, and ceremonial transitions.
-- For Chinese, avoid mirroring English noun chains, passive constructions, and template headings; use compact, idiomatic technical prose.
-- Rewrite anything that sounds translated, inflated, generic, or unlike the surrounding document.
+## 5. Out of Scope
 
-Clarity does not require erasing the author's voice. Preserve deliberate brevity,
-directness, informality, or first-person experience when it fits the audience.
+- What this proposal intentionally does not solve
+- Future work for separate proposals
+- Related systems not changed here
 
-## Review and Revise
+## 6. Proposal
 
-Review the proposal in separate passes:
+### 6.1 Design Rule
 
-1. **Decision**: Is the requested decision clear and appropriately scoped?
-2. **Reasoning**: Do the conclusions follow from the evidence and assumptions?
-3. **Consequences**: Are decision-changing effects, risks, and unknowns visible?
-4. **Reader**: Can the intended audience understand and evaluate the change?
-5. **Structure**: Does each part advance the case without repetition or ceremony?
-6. **Language**: Does the document sound natural, precise, and consistent with its context?
+State the core rule or invariant.
 
-When revising, fix the reusable cause of a problem and preserve unaffected prose,
-facts, citations, examples, terminology, and formatting. When reviewing, report
-findings in order of consequence and distinguish blocking issues from optional
-improvements.
+### 6.2 Syntax / API / Interface
 
-## Deliver Adaptively
+Show the exact user-facing or implementer-facing contract.
 
-- For a draft, deliver the proposal or update the requested artifact.
-- For a revision, summarize the material changes without narrating every edit.
-- For a review, present findings first and keep any summary secondary.
-- Keep a simple proposal simple; do not add sections to signal rigor.
-- Follow an existing template only when the destination actually requires it.
-- Keep internal reasoning and self-review internal unless a remaining uncertainty helps the user decide.
+### 6.3 Examples as Specification
 
-## Final Quality Gate
+Use examples to define behavior, not as decoration.
 
-Before delivering, verify:
+```go
+// current form
+...
 
-- The reader can identify the decision and why it matters.
-- The proposal distinguishes evidence, interpretation, and recommendation where needed.
-- The proposed change is precise enough for the current decision.
-- Detail is proportional to uncertainty, impact, and review risk.
-- Material consequences and unresolved questions are not hidden.
-- The structure fits this proposal rather than a generic template.
-- The target language sounds natural and the author's voice remains recognizable.
-- The document contains no invented support or sections that exist only for completeness.
+// proposed form
+...
+
+// equivalent / desugared form
+...
+```
+
+### 6.4 Boundary Cases
+
+Show valid, invalid, omitted, conflict, or fallback cases.
+
+## 7. Error Handling
+
+| Condition | Behavior |
+|---|---|
+| Invalid input | Error behavior |
+| Missing optional dependency | Warning / skip behavior |
+| Conflict | Fatal behavior |
+
+## 8. Compatibility
+
+State whether the change is additive, breaking, opt-in, migrated, or version-gated.
+
+## 9. Alternatives Considered
+
+### 9.1 <Alternative>
+
+Why it was considered and why it was rejected.
+
+## 10. Testing Strategy
+
+| Test case | Method |
+|---|---|
+| Normal case | Expected assertion |
+| Error case | Expected diagnostic |
+| Compatibility case | Existing behavior unchanged |
+
+## 11. Summary of Changes
+
+| Area | Change |
+|---|---|
+| Parser / API / CLI / UI / docs | Specific change |
+```
+
+## Full Specification Additions
+
+Add only the sections that create review value.
+
+| Proposal type | Add details |
+|---|---|
+| Language or syntax | Grammar, desugaring, type rules, valid and invalid examples, formatter/tooling impact |
+| API or library | Signature, parameters, return values, side effects, ownership, concurrency, error model |
+| CLI or toolchain | Command interface, flags, trigger points, execution order, path resolution, generated files |
+| Data model or protocol | Schema, field meanings, validation, versioning, migration, compatibility |
+| DSL or query language | Scope, Quick Reference, Core Concepts, syntax rules, query examples, implementation considerations |
+| Architecture | Module boundaries, ownership, dependency direction, global side effects, rollback path |
+| Product workflow | User states, permissions, empty/error/loading states, audit or analytics behavior if needed |
+
+## Style Rules
+
+- Lead with the smallest decision point, not the whole future system.
+- Prefer one clear rule over multiple mechanisms.
+- Use code examples as normative specification: current form, proposed form, equivalent/desugared form, and invalid cases.
+- Put user stories before abstract motivation when the need comes from usage.
+- Treat `Workarounds` as evidence for why the proposal should exist.
+- Treat `Out of Scope` as mandatory for non-trivial changes.
+- Prefer tables for parameters, flags, errors, behavior matrices, and summaries.
+- Keep implementation notes practical: parser, type checker, API, command, docs, tests.
+- Put uncertain decisions in `Open Questions`; do not silently hard-code them.
+- Avoid marketing language and broad architecture claims.
+
+## Common Mistakes
+
+| Mistake | Fix |
+|---|---|
+| Trying to describe the whole system | Narrow to the next design increment |
+| Adding a feature from one case | Check broader user stories and extract the shared need |
+| Overexplaining before examples | Show the concrete behavior first |
+| Creating a new mechanism too early | Reuse or simplify existing principles where possible |
+| Missing boundary cases | Add valid, invalid, conflict, and fallback examples |
+| Treating examples as illustrative only | Make examples define normative behavior |
+| Ignoring workaround quality | Explain what redundancy or manual work remains today |
+| Full spec for a tiny change | Use the short template unless risk justifies more |
+
+## Review Checklist
+
+Before delivering a proposal, verify:
+
+- It advances one clear increment.
+- The design is as simple and direct as the problem allows.
+- It removes redundancy, manual work, or special-case memory.
+- User stories justify the need beyond one accidental case.
+- Boundaries, invalid cases, and out-of-scope items are explicit.
+- Examples define the behavior precisely enough to test.
+- Compatibility and migration are stated.
+- The proposal can become an implementation checklist without expanding scope.
