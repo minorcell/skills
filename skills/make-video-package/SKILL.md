@@ -104,13 +104,49 @@ edge-tts 的 `SentenceBoundary` 事件给出**逐句精确时间戳**，字幕�
 ## 第六步：渲染与合成
 
 ```bash
-python3 scripts/render.py /tmp/durs.json /tmp/vid all   # 逐帧渲染，直接管道给 ffmpeg
+# 并行（推荐）：每场一个进程，同时跑
+python3 scripts/render_par.py /tmp/durs.json /tmp/vid all
+
+# 顺序（备选，或机器核少时）
+python3 scripts/render.py /tmp/durs.json /tmp/vid all
+
 python3 scripts/build_final.py /path/to/final.mp4       # 与配音合成，加淡入淡出
 ```
 
 - 逐帧渲染**直接 pipe 给 ffmpeg**，不落盘 PNG（12 分钟视频约 2.3 万帧，落盘会很慢）。
 - 每场 `LEAD 0.30s` + 配音 + `TAIL 0.70s`，场景间有呼吸感。
-- 性能参考：1080p 单帧约 29ms。12 分钟成片渲染约 12-15 分钟，**分块跑**，单次 bash 调用会超时。
+
+### 两个渲染器怎么选
+
+两个都保留，产出格式完全一致（文件名、manifest 格式相同，`build_final.py` 与
+`make_srt.py` 都不用改）。按情况挑：
+
+| 情况 | 用哪个 | 理由 |
+|---|---|---|
+| 多场次（>4 场）、核数充足（≥4 核） | **`render_par.py`** | 单场一个进程，并行快得多 |
+| 只渲 1-2 场 | `render.py` | 并行版有进程启动与 spawn 开销，场次少时占不到便宜 |
+| 核少（≤2 核）或机器当下已经卡 | `render.py` | 并行会抢占其他程序的 CPU，机器会明显发涩 |
+| 要断点续跑、边渲边看单场输出 | `render.py` | 顺序输出更直观，进度是线性的 |
+
+**worker 数用默认值 `min(场数, 核数)`，别调更高。** 每个 worker 实际是 2 个进程
+（Python + ffmpeg），worker 数超过物理核只会被调度拖慢。
+
+单场耗时在并行下会比顺序长（CPU 争抢），这是正常的 —— 看墙钟总量。
+
+### 并行版的已知边界
+
+- **画面像素一致，编码字节不保证逐位相同。** 同一帧逐像素比对最大差为 0，
+  但 `framemd5` 的哈希不同。这**不是并行引入的**：x264 多线程编码本身不确定，
+  同一个 `render.py` 跑两遍哈希同样不同。所以回归验收要比起帧数与画面，
+  别用「两次渲染的 mp4 字节完全相同」。
+- **spawn 模式下每场都要重新 import + `scenes.setup()`**，worker 里已经做了。
+  自己改写这个文件时别删那句 setup，否则颜色会退回默认主题。
+
+### 分块跑仍然必要
+
+- 全量渲染（十几场、两万多帧）在单次 bash 调用里仍可能撞 600s 上限，稳妥起见分两批。
+- 后台跑（`run_in_background: true`）比前台更省事，但要确认进程还活着（`ps aux | grep render`）。
+- 每场渲染完立即落盘 mp4，中途挂了只要重跑缺的场次（用场景过滤参数）。
 
 ## 第七步：验收（不许省）
 

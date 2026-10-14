@@ -37,10 +37,28 @@ edge-tts 的 `SentenceBoundary` 事件带精确的 `offset`/`duration`，直接�
 
 ## 4. 渲染超时 / 后台进程被杀
 
-12 分钟成片约 2.3 万帧，1080p 约 29ms/帧，总计 12-15 分钟。
+12 分钟成片约 2.3 万帧，1080p 约 29ms/帧。**顺序渲染总计 12-15 分钟。**
 
-- **分块渲染**，每次 bash 调用只跑几场，否则工具超时。
-- 后台进程（`nohup ... &`）可能在 bash 调用结束时被一起杀掉。长任务要么前台分块跑，要么确认进程真的还活着（`ps aux | grep`）再等。
+### 单线程是主要瓶颈
+
+`render.py` 一个进程只吃约 1.4 个核（Python 画帧约 95% 一个核 + 本进程 ffmpeg
+约 42%），核多的机器大部分算力闲置。场景之间天然独立，所以提供了并行的
+`render_par.py`：每场一个进程，输出格式与顺序版完全一致。
+
+两个渲染器按情况挑（选型表见 SKILL.md 第六步）：**多场次 + 核数够 → 并行；
+只渲 1-2 场、核少、或机器当下已经卡 → 顺序**。
+
+- **worker 数用默认的 `min(场数, 核数)`，别调更高。** 每个 worker 是 2 个进程
+  （Python + ffmpeg），超过物理核只会被调度拖慢。
+- 并行下单场耗时变长是 CPU 争抢的代价，看**墙钟**总量，别看单场。
+- `render_par.py` 按配音时长倒序派发，长场先跑，避免末尾剩一个长场拖长总时间。
+
+### 分块跑 / 看住后台
+
+- 全量渲染在单次 bash 调用里可能撞 600s 超时，稳妥起见分两批。
+- 后台进程可能在 bash 调用结束时被一起杀掉。用 `run_in_background: true`，
+  然后 `ps aux | grep render` 确认还活着再等。
+- 每场渲染完立即落盘 mp4，中途挂了只需重跑缺的场次（场景过滤参数）。
 
 ## 5. edge-tts 报 403
 
@@ -77,6 +95,58 @@ edge-tts 的 `SentenceBoundary` 事件带精确的 `offset`/`duration`，直接�
 - **抖动必须按 seed 确定。** 用全局 `random` 会让同一帧在不同调用里产生不同抖动，成片闪烁。`theme.py` 里所有抖动都走 `_rng(salt)`。
 - **抖动是低频的。** 逐点随机噪声看起来像信号干扰，不像手绘。做法是两三个正弦波叠加 + 端点外延。抖动幅度 2-3px 够了，超过 5px 会显得脏。
 
-## 10. 别把 AIGC 标注忘了
+## 10. 页眉品牌名写死在模板里（换主题必踩）
+
+`engine.py` 的 `header()` 里曾经硬编码了模板主题的品牌标记：
+
+```python
+d.text((56, 40), "GIT", font=font(21, "b", mono=True), fill=ORANGE)
+```
+
+换主题时这里**不会报错**，只会安静地把旧主题的名字印在每一帧的左上角。
+后果很严重：成片全部导出、字幕做完、封面做完之后，才发现每一帧都印着
+上一个主题的品牌名，只能**全量重渲**。
+
+**已修**：`engine.BRAND` 是可以被覆盖的模块级变量，`scenes.setup()` 会从
+`content.py` 读 `BRAND` 写进去。新主题只要在 `content.py` 里写一行：
+
+```python
+BRAND = "XXX"        # 页眉左侧的标记，用 ASCII（走等宽字体）
+```
+
+**动手前自查**：`grep -n '"GIT"\|"flat"\|"handdrawn"' scripts/engine.py scripts/scenes.py`
+——模板里任何写死的主题相关字面量都要在开工时先清掉。
+
+## 11. 解说词漏一个逗号 → 元组 → TTS 报 `text must be str`
+
+多行字符串靠**相邻字面量自动拼接**，不写逗号也能连起来。但漏掉中间某一行的逗号，
+那两行就变成**元组**，前面的行是个字符串：
+
+```python
+narration=(
+    "第一段。"          # ← 漏了这个逗号
+    "第二段。"          # 加上这个逗号，前两行就成了 tuple
+    "第三段。"
+)
+# 结果 narration 是 ('第一段。第二段。', '第三段。')
+```
+
+`edge-tts` 直接报 `TypeError: text must be str`，重试 4 次全失败，然后**静默回落到本地
+`say`**（音色机械，不能交付）。
+
+**防御**：写完 `content.py` 立刻跑一次断言，比渲染完才发现便宜得多。
+
+```python
+python3 -c "
+from content import SCENES
+for sc in SCENES:
+    assert isinstance(sc['narration'], str), (sc['sid'], type(sc['narration']))
+print('解说词全部是字符串 ✓', len(SCENES), '场')"
+```
+
+`render.py` / `render_par.py` / `make_srt.py` 也应该在读 `SCENES` 时做同样的断言 ——
+元组在 `len()` 和切句里同样会静默出错，只是错误更隐蔽。
+
+## 12. 别把 AIGC 标注忘了
 
 配音是 AI 合成的，平台对 AIGC 内容有标识要求。发布文案里要提醒用户勾选平台声明或在简介注明。这不是可选项。
