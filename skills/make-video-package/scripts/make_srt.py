@@ -6,19 +6,19 @@
 
 字幕的全局时刻必须算上场景之间的留白：
     第 i 场开始 = 前面所有场的 (LEAD + 配音时长 + TAIL) 之和
-这个公式必须与 render.py / build_final.py 里的 LEAD、TAIL 保持一致，
-差一秒字幕就会整体漂移。
+留白值统一从 engine.py 读取。
 """
 import json
 import os
 import subprocess
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, HERE)
-from content import SCENES  # noqa: E402
+from project import configure_source
 
-LEAD, TAIL = 0.30, 0.70
+configure_source()
+
+from content import SCENES  # noqa: E402
+from engine import LEAD, TAIL  # noqa: E402
 
 
 def dur(p):
@@ -82,7 +82,7 @@ def main():
     out_path = sys.argv[2] if len(sys.argv) > 2 else "/tmp/sub.srt"
 
     entries = []
-    clock = 0.0
+    clock = LEAD
     for i, sc in enumerate(SCENES):
         sid = sc["sid"]
         if i > 0:

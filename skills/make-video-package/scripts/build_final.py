@@ -10,12 +10,12 @@ import os
 import subprocess
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, HERE)
-from content import SCENES  # noqa: E402
+from project import configure_source
 
-LEAD, TAIL = 0.30, 0.70
-# 留白必须与 render.py、make_srt.py 保持一致，否则音画与字幕会错位。
+configure_source()
+
+from content import SCENES  # noqa: E402
+from engine import LEAD  # noqa: E402
 
 
 def dur(p):

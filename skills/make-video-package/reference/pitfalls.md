@@ -21,7 +21,7 @@ Pillow 不会报错，`getlength()` 也返回正常数值，**只有把图渲染
 **验证方法**：算每场的「最大静止间隔」和「尾部静止」，超过 3-4 秒就要调。当时有场戏尾部静止 23 秒。
 
 三层解决，缺一不可：
-- `timing.py` 把动画节点锚到句子节拍，并压进时长的前 62%（`BUILD_FRACTION`）。
+- `timing.py` 把动画节点锚到句子节拍，并按场景时长调整构建窗口。
 - 终端打字动画独立按真实时长铺满（`Terminal.draw` 里的 `SCENE_REAL_DUR` 分支）。
 - 节点数远少于句子数时，均匀铺满整段而不是挤在开头。
 
@@ -33,25 +33,11 @@ Pillow 不会报错，`getlength()` 也返回正常数值，**只有把图渲染
 
 edge-tts 的 `SentenceBoundary` 事件带精确的 `offset`/`duration`，直接用它。只有在本地 TTS 兜底（拿不到时间戳）时才退回比例估算。
 
-字幕时间还要加上场景间留白：第 i 场的开始时刻 = 前面所有场的 `LEAD + 配音时长 + TAIL` 之和。
+字幕时间还要加上开场留白：第 i 场的配音开始时刻 = 前面所有场的 `LEAD + 配音时长 + TAIL` 之和，再加本场的 `LEAD`。
 
 ## 4. 渲染超时 / 后台进程被杀
 
 12 分钟成片约 2.3 万帧，1080p 约 29ms/帧。**顺序渲染总计 12-15 分钟。**
-
-### 单线程是主要瓶颈
-
-`render.py` 一个进程只吃约 1.4 个核（Python 画帧约 95% 一个核 + 本进程 ffmpeg
-约 42%），核多的机器大部分算力闲置。场景之间天然独立，所以提供了并行的
-`render_par.py`：每场一个进程，输出格式与顺序版完全一致。
-
-两个渲染器按情况挑（选型表见 SKILL.md 第六步）：**多场次 + 核数够 → 并行；
-只渲 1-2 场、核少、或机器当下已经卡 → 顺序**。
-
-- **worker 数用默认的 `min(场数, 核数)`，别调更高。** 每个 worker 是 2 个进程
-  （Python + ffmpeg），超过物理核只会被调度拖慢。
-- 并行下单场耗时变长是 CPU 争抢的代价，看**墙钟**总量，别看单场。
-- `render_par.py` 按配音时长倒序派发，长场先跑，避免末尾剩一个长场拖长总时间。
 
 ### 分块跑 / 看住后台
 
@@ -136,16 +122,19 @@ narration=(
 
 **防御**：写完 `content.py` 立刻跑一次断言，比渲染完才发现便宜得多。
 
-```python
+```bash
 python3 -c "
+import sys
+sys.path.insert(0, 'scripts')
+from project import configure_source
+configure_source()
 from content import SCENES
 for sc in SCENES:
     assert isinstance(sc['narration'], str), (sc['sid'], type(sc['narration']))
 print('解说词全部是字符串 ✓', len(SCENES), '场')"
 ```
 
-`render.py` / `render_par.py` / `make_srt.py` 也应该在读 `SCENES` 时做同样的断言 ——
-元组在 `len()` 和切句里同样会静默出错，只是错误更隐蔽。
+渲染和字幕生成前也要验证 `SCENES` 的数据类型，避免错误在后续步骤才暴露。
 
 ## 12. 别把 AIGC 标注忘了
 

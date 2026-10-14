@@ -6,13 +6,15 @@
   系统自带的 `say` / espeak 音色机械，不能用于正式发布。
 
 关键能力：stream() 会返回 SentenceBoundary 事件，带精确的
-offset/duration。字幕与画面节拍由它驱动，不再靠字数比例猜。
+offset/duration。字幕使用这些时间戳；画面节拍目前按句子长度估算。
 
 若 edge-tts 因微软端点调整而报 403，先 `pip install -U edge-tts`
 （2026-10 那次端点迁移就是靠升级到 7.3.1 修好的）；仍不行则回落到
 本地引擎——音色差，仅供预览，不要发布。
 """
 import asyncio
+import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -117,7 +119,7 @@ def determine_marks(narration, dur, marks):
 
 
 def generate(scenes, audio_dir, voice=DEFAULT_VOICE, rate=DEFAULT_RATE,
-             allow_local_fallback=True):
+             allow_local_fallback=False):
     """为每个场景生成配音。
 
     scenes: [dict(sid=..., narration=...), ...]
@@ -137,24 +139,42 @@ def generate(scenes, audio_dir, voice=DEFAULT_VOICE, rate=DEFAULT_RATE,
             sid = sc["sid"]
             path = os.path.join(audio_dir, sid + ".mp3")
             marks_path = os.path.join(audio_dir, sid + ".marks.json")
+            meta_path = os.path.join(audio_dir, sid + ".meta.json")
+            source_hash = hashlib.sha256(json.dumps(
+                [sc["narration"], voice, rate], ensure_ascii=False
+            ).encode("utf-8")).hexdigest()
 
-            # 断点续跑：已生成且标记齐备就跳过
-            if os.path.exists(path) and os.path.exists(marks_path) and \
-                    probe_duration(path) > 0.4:
+            try:
+                with open(meta_path, encoding="utf-8") as f:
+                    cached_meta = json.load(f)
+            except (FileNotFoundError, ValueError, AttributeError):
+                cached_meta = {}
+            if not isinstance(cached_meta, dict):
+                cached_meta = {}
+
+            cache_usable = (cached_meta.get("engine") == "edge-tts" or
+                            (allow_local_fallback and cached_meta.get("engine") == "local"))
+            if (cache_usable and cached_meta.get("source_hash") == source_hash
+                    and os.path.exists(path) and os.path.exists(marks_path)
+                    and probe_duration(path) > 0.4):
                 result[sid] = _load(path, marks_path, sc["narration"])
                 print(f"  {sid:20s} 复用  {result[sid]['dur']:6.2f}s")
                 continue
 
             try:
                 marks = await _synth_retry(sc["narration"], path, voice, rate)
+                synthesizer = "edge-tts"
             except Exception as e:
                 if not allow_local_fallback:
                     raise
                 print(f"  {sid} edge-tts 失败，回落本地引擎：{str(e)[:60]}")
                 marks = _local_tts(sc["narration"], path)
+                synthesizer = "local"
 
             with open(marks_path, "w", encoding="utf-8") as f:
                 json.dump(marks, f, ensure_ascii=False)
+            with open(meta_path, "w", encoding="utf-8") as f:
+                json.dump({"source_hash": source_hash, "engine": synthesizer}, f)
             result[sid] = _load(path, marks_path, sc["narration"])
             print(f"  {sid:20s} {result[sid]['dur']:6.2f}s  "
                   f"句={len(result[sid]['marks']):2d}  "
@@ -184,5 +204,23 @@ def check_engine():
 
 
 if __name__ == "__main__":
-    ok, msg = check_engine()
-    print(("OK   " if ok else "FAIL ") + msg)
+    parser = argparse.ArgumentParser(description="生成配音和场景时长文件")
+    parser.add_argument("audio_dir", nargs="?", default="/tmp/audio")
+    parser.add_argument("durs_path", nargs="?", default="/tmp/durs.json")
+    parser.add_argument("--check", action="store_true", help="检查 edge-tts 是否可用")
+    parser.add_argument("--allow-local-fallback", action="store_true",
+                        help="仅供预览；本地配音不适合交付")
+    args = parser.parse_args()
+    if args.check:
+        ok, msg = check_engine()
+        print(("OK   " if ok else "FAIL ") + msg)
+        raise SystemExit(0 if ok else 1)
+
+    from project import configure_source
+    configure_source()
+    from content import SCENES, VOICE, RATE
+    result = generate(SCENES, args.audio_dir, voice=VOICE, rate=RATE,
+                      allow_local_fallback=args.allow_local_fallback)
+    with open(args.durs_path, "w", encoding="utf-8") as f:
+        json.dump({sid: item["dur"] for sid, item in result.items()}, f, indent=2)
+    print("wrote", args.durs_path)

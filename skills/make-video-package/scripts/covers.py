@@ -9,7 +9,9 @@ import os
 import sys
 from PIL import Image, ImageDraw, ImageFilter
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from project import configure_source
+
+configure_source()
 
 import engine  # noqa: E402
 from engine import font, measure, wrap, blend  # noqa: E402

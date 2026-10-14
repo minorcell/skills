@@ -31,8 +31,9 @@ def setup():
 
     必须在导入本模块之后调用一次（管线脚本的 main 开头会调）。
     """
-    from content import THEME
+    from content import BRAND, THEME
     engine.use_theme(THEME)
+    engine.BRAND = BRAND
     g = globals()
     for n in _COLOR_NAMES:
         g[n] = getattr(engine, n)

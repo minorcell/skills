@@ -5,8 +5,12 @@ import os
 import subprocess
 import sys
 
+from project import configure_source
+
+configure_source()
+
 import engine
-from engine import W, H, FPS, header
+from engine import W, H, FPS, LEAD, TAIL, header
 import scenes
 from content import SCENES
 from timing import Warp
@@ -14,10 +18,6 @@ from timing import Warp
 # 应用 content.py 里的主题。必须在任何绘制之前调用：
 # 它会把 engine 与 scenes 里的颜色名重新绑定到新主题。
 scenes.setup()
-
-TAIL = 0.7          # 每场结束后留白
-LEAD = 0.30         # 开场前留白
-
 
 def render_scene(sc, dur, out_path, progress_base, progress_span):
     """把单场景渲染成无声的 mp4。dur 为该场配音时长。"""

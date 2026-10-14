@@ -20,7 +20,7 @@ description: 用户给一个主题，通过提问把目标问清楚，然后产�
 
 ## 第一步：提问（不要跳过）
 
-主题从来不是需求。开工前必须问清下面这几项，**一次问完**，然后才动手。用 `AskUserQuestion`，每题 3-4 个选项，把推荐项排在第一个。
+主题从来不是需求。开工前必须问清下面这几项，**一次问完**，然后才动手。使用当前 Agent 可用的提问方式，每题给 3-4 个选项，把推荐项排在第一个。
 
 必问的四面：
 
@@ -55,13 +55,23 @@ T["paper"], T["ink"], T["accent"]
 主题方法：`hand_path` / `hand_rect` / `hand_round_rect` / `hand_blob` / `hand_arrow` / `hand_underline` / `scribble` / `card`。
 抖动是**按 seed 确定的**——同一帧重复绘制结果必须一致，否则成片会闪烁。
 
-## 第三步：写脚本（content.py）
+## 第三步：写脚本（content.py / scenes.py）
+
+在 skill 目录直接运行 `scripts/*.py`；脚本默认读取 `templates/content.py` 和 `templates/scenes.py`，不需要复制脚本。制作新主题时，在本次视频的源码目录中编写 `content.py` 和 `scenes.py`，并设置 `VIDEO_SOURCE_DIR` 指向该目录：
+
+```bash
+export VIDEO_SOURCE_DIR=/path/to/video-source
+```
+
+两个文件都必须存在。未设置 `VIDEO_SOURCE_DIR` 时运行的是随 skill 附带的 Git 示例。交付源码时包含这两个项目文件和使用的脚本。
 
 分镜脚本是唯一的内容源，**解说词驱动画面时长**（不是先定画面再塞词）。
 
 ```python
 VOICE = "zh-CN-XiaoxiaoNeural"
 RATE  = "+8%"
+THEME = "flat"
+BRAND = ""  # 页眉品牌；空串只显示章节名
 SCENES = [
     dict(sid="s01_hook", chapter=None, render="hook", narration="……"),
     dict(sid="s02_what", chapter="一 · 什么是版本控制", render="savepoint", narration="……"),
@@ -80,11 +90,11 @@ SCENES = [
 ## 第四步：配音与时间戳
 
 ```bash
-python3 scripts/tts.py            # 先自检，确认能出声
-python3 -c "from tts import generate; from content import SCENES; generate(SCENES, '/tmp/audio')"
+python3 scripts/tts.py --check
+python3 scripts/tts.py /tmp/audio /tmp/durs.json
 ```
 
-edge-tts 的 `SentenceBoundary` 事件给出**逐句精确时间戳**，字幕和画面节拍都由它驱动。这比按字数比例估算准得多——当时那版视频用的是比例估算，字幕会有累积漂移。
+edge-tts 的 `SentenceBoundary` 事件给出**逐句精确时间戳**，字幕使用这些标记；`durs.json` 提供渲染所需的各场配音时长。画面节拍目前按解说词的句子长度估算。修改解说词、音色或语速后重跑此命令，受影响场景的配音会重新生成。
 
 ⚠️ **edge-tts 会因微软端点调整而报 403。** 2026-10 那次是靠升级到 7.3.1 修好的。遇到 403 先 `pip install -U edge-tts`，光重试没有用。本地引擎（macOS `say`）只作最后兜底，音色机械，**不要交付**。
 
@@ -96,7 +106,7 @@ edge-tts 的 `SentenceBoundary` 事件给出**逐句精确时间戳**，字幕�
 
 - 解析场景函数里的动画节点（源码正则 + 在 `t=∞` 处干跑一次，捕获循环里生成的节点）。
 - 把节点映射到句子开始时刻；节点数少于句子数时，均匀铺满整段。
-- 把整组锚点压进时长的 `[3%, 62%]` 窗口——画面在前三分之二搭好，之后完整画面陪讲。否则元素稀稀拉拉拖到最后一秒，中间大片空白。
+- 构建窗口随场景时长调整，避免长场景过早静止。
 - 终端打字动画**独立于**场景 warp，按真实时长铺满整场（`TERMINAL_FILL = 0.90`）。
 
 改完必须验证：`最大静止间隔` 和 `尾部静止` 都不该超过 3-4 秒。长静止 = 观众以为视频卡了。
@@ -104,43 +114,14 @@ edge-tts 的 `SentenceBoundary` 事件给出**逐句精确时间戳**，字幕�
 ## 第六步：渲染与合成
 
 ```bash
-# 并行（推荐）：每场一个进程，同时跑
-python3 scripts/render_par.py /tmp/durs.json /tmp/vid all
-
-# 顺序（备选，或机器核少时）
 python3 scripts/render.py /tmp/durs.json /tmp/vid all
 
-python3 scripts/build_final.py /path/to/final.mp4       # 与配音合成，加淡入淡出
+python3 scripts/build_final.py /path/to/final.mp4 /tmp/vid /tmp/audio
+python3 scripts/make_srt.py /tmp/audio /path/to/final.srt
 ```
 
 - 逐帧渲染**直接 pipe 给 ffmpeg**，不落盘 PNG（12 分钟视频约 2.3 万帧，落盘会很慢）。
 - 每场 `LEAD 0.30s` + 配音 + `TAIL 0.70s`，场景间有呼吸感。
-
-### 两个渲染器怎么选
-
-产出格式完全一致（文件名、manifest 格式相同，`build_final.py` 与
-`make_srt.py` 都不用改）。按情况挑：
-
-| 情况 | 用哪个 | 理由 |
-|---|---|---|
-| 多场次（>4 场）、核数充足（≥4 核） | **`render_par.py`** | 单场一个进程，并行快得多 |
-| 只渲 1-2 场 | `render.py` | 并行版有进程启动与 spawn 开销，场次少时占不到便宜 |
-| 核少（≤2 核）或机器当下已经卡 | `render.py` | 并行会抢占其他程序的 CPU，机器会明显发涩 |
-| 要断点续跑、边渲边看单场输出 | `render.py` | 顺序输出更直观，进度是线性的 |
-
-**worker 数用默认值 `min(场数, 核数)`，别调更高。** 每个 worker 实际是 2 个进程
-（Python + ffmpeg），worker 数超过物理核只会被调度拖慢。
-
-单场耗时在并行下会比顺序长（CPU 争抢），这是正常的 —— 看墙钟总量。
-
-### 并行版的已知边界
-
-- **画面像素一致，编码字节不保证逐位相同。** 同一帧逐像素比对最大差为 0，
-  但 `framemd5` 的哈希不同。这**不是并行引入的**：x264 多线程编码本身不确定，
-  同一个 `render.py` 跑两遍哈希同样不同。所以回归验收要比起帧数与画面，
-  别用「两次渲染的 mp4 字节完全相同」。
-- **spawn 模式下每场都要重新 import + `scenes.setup()`**，worker 里已经做了。
-  自己改写这个文件时别删那句 setup，否则颜色会退回默认主题。
 
 ### 分块跑仍然必要
 
@@ -178,7 +159,7 @@ python3 scripts/build_final.py /path/to/final.mp4       # 与配音合成，加�
 - `reference/publish.md` —— 各平台的标题/简介/标签规则、封面尺寸、发布时间、AIGC 标注要求。
 - `reference/narration.md` —— 解说词写作规范：结构、语速、比喻、术语处理。
 - `reference/pitfalls.md` —— 已知坑：字体方块、时间轴漂移、终端静止、渲染超时等，动手前先读一遍。
-- `scripts/content.example.py` + `scripts/scenes.example.py` —— 一个完整的实例（Git 入门，16 场，扁平风），改它比从零写快。
+- `templates/content.py` + `templates/scenes.py` —— 一个完整的实例（Git 入门，16 场，扁平风）；也是未设置 `VIDEO_SOURCE_DIR` 时的默认内容。
 
 ## 依赖
 

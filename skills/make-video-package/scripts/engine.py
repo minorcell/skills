@@ -20,6 +20,14 @@ from theme import get_theme
 W, H = 1920, 1080
 FPS = 30
 
+# 每场开场前 / 结束后的留白（秒）。渲染、合成、字幕共用。
+LEAD = 0.30
+TAIL = 0.70
+
+# 页眉左侧的品牌标记（ASCII，走等宽字体）。由 scenes.setup() 从
+# content.py 的 BRAND 写入；空串表示不显示品牌，只画章节名。
+BRAND = ""
+
 # ---------------------------------------------------------------- 主题绑定
 # 场景代码里的颜色名 -> 主题里的键。改主题后这些名字自动换值。
 _COLOR_MAP = {
@@ -450,10 +458,14 @@ def header(img, d, chapter, progress):
     if chapter:
         f = font(21, "b")
         fw = font(21)
-        d.text((56, 40), "GIT", font=font(21, "b", mono=True), fill=ORANGE)
-        off = measure(d, "GIT", font(21, "b", mono=True)) + 16
-        d.text((56 + off, 40), "·", font=fw, fill=BORDER_D)
-        d.text((56 + off + 20, 40), chapter, font=f, fill=MUTED)
+        x = 56
+        if BRAND:
+            brand_font = font(21, "b", mono=True)
+            d.text((x, 40), BRAND, font=brand_font, fill=ORANGE)
+            x += measure(d, BRAND, brand_font) + 16
+            d.text((x, 40), "·", font=fw, fill=BORDER_D)
+            x += 20
+        d.text((x, 40), chapter, font=f, fill=MUTED)
 
 
 def title(img, d, main, sub=None, y=104, maxw=1500, color=None, size=62, fsize=28):
