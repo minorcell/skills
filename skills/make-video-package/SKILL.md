@@ -118,7 +118,7 @@ python3 scripts/build_final.py /path/to/final.mp4       # 与配音合成，加�
 
 ### 两个渲染器怎么选
 
-两个都保留，产出格式完全一致（文件名、manifest 格式相同，`build_final.py` 与
+产出格式完全一致（文件名、manifest 格式相同，`build_final.py` 与
 `make_srt.py` 都不用改）。按情况挑：
 
 | 情况 | 用哪个 | 理由 |
