@@ -13,13 +13,10 @@
 npx skills add minorcell/skills
 
 # 只安装其中一个 skill
-npx skills add minorcell/skills --skill make-video-package
-
-# 安装技术提案写作 skill
 npx skills add minorcell/skills --skill writing-proposals
 
 # 全局安装（写入 ~/.agents/skills/）
-npx skills add minorcell/skills --skill make-video-package --global
+npx skills add minorcell/skills --skill writing-proposals --global
 ```
 
 `-y` 可跳过确认提示；`--agent` 可指定要安装的 Agent 工具（如 `claude-code`、`cursor`），不指定则自动检测已安装的工具。
@@ -28,7 +25,6 @@ npx skills add minorcell/skills --skill make-video-package --global
 
 | Skill | 说明 |
 |---|---|
-| [make-video-package](./skills/make-video-package) | 给一个主题，通过提问把需求问清楚，然后产出一整包可发布的视频交付物：1080p 成片 MP4、封面、SRT 字幕、平台发布用的标题/简介/标签。画面由 Python 逐帧绘制，配音由 TTS 合成并按句子节拍对齐。 |
 | [writing-proposals](./skills/writing-proposals) | 起草、改写和评审技术提案、RFC、API、语言、工具、协议设计及实施计划。从真实用户场景出发，以小步推进、减法设计和明确边界形成可评审、可实现、可验证的方案，按风险选择简短模板、标准模板或完整规范。 |
 
 ## 使用示例
@@ -50,11 +46,6 @@ skills/
 ├── README.md
 ├── LICENSE
 └── skills/
-    ├── make-video-package/  # 每个 skill 一个目录，目录名 = SKILL.md 的 name
-    │   ├── SKILL.md         # 必需：frontmatter 含 name、description
-    │   ├── scripts/         # 可选：skill 引用的脚本
-    │   ├── templates/       # 可选：模板文件
-    │   └── reference/       # 可选：补充参考文档
     └── writing-proposals/
         ├── SKILL.md         # 中文指导、工作流程、模板和评审检查项
         └── LICENSE          # 随 skill 分发的 MIT 许可证副本
